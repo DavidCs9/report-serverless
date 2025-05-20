@@ -24,23 +24,43 @@ async function createTables() {
   });
 
   try {
-    // Create report_jobs table
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS report_jobs (
-        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-        job_id VARCHAR(36) NOT NULL UNIQUE,
-        status ENUM('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED') NOT NULL,
-        s3_url VARCHAR(255),
-        error_message TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        INDEX idx_job_id (job_id),
-        INDEX idx_status (status),
-        INDEX idx_created_at (created_at)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-    `);
+    // Drop report_jobs table
+    await connection.execute("DROP TABLE IF EXISTS report_jobs;");
+    logger.info("report_jobs table dropped (if it existed).");
 
+    // Create report_jobs table
+    logger.info("Creating report_jobs table...");
+    await connection.execute(`
+      CREATE TABLE report_jobs (
+            job_id VARCHAR(255) PRIMARY KEY,
+            status ENUM('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED') NOT NULL,
+            s3_url VARCHAR(1024) NULL,
+            error_message TEXT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        );
+    `);
     logger.info("Successfully created report_jobs table");
+
+    // Drop silo_hourly_aggregates table
+    logger.info("Dropping silo_hourly_aggregates table if it exists...");
+    await connection.execute("DROP TABLE IF EXISTS silo_hourly_aggregates;");
+    logger.info("silo_hourly_aggregates table dropped (if it existed).");
+
+    // Create silo_hourly_aggregates table
+    logger.info("Creating silo_hourly_aggregates table...");
+    await connection.execute(`
+      CREATE TABLE silo_hourly_aggregates (
+            silo_id INT NOT NULL,
+            hour_timestamp TIMESTAMP NOT NULL, -- e.g., 2025-05-19 14:00:00
+            avg_value DECIMAL(10, 2),
+            min_value DECIMAL(10, 2),
+            max_value DECIMAL(10, 2),
+            sum_value DECIMAL(10, 2),
+            record_count INT,
+            PRIMARY KEY (silo_id, hour_timestamp)
+        );`); // Note: The trailing comma was removed in the previous suggestion
+    logger.info("Successfully created silo_hourly_aggregates table");
 
     // Add any additional tables here as needed
 
@@ -49,7 +69,9 @@ async function createTables() {
     logger.error("Error creating tables:", error);
     throw error;
   } finally {
-    await connection.end();
+    if (connection) {
+      await connection.end();
+    }
   }
 }
 
