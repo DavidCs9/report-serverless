@@ -29,8 +29,8 @@ services:
       - NODE_ENV=development
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USER=report_user
-      - DB_PASSWORD=report_password
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
       - DB_NAME=report_db
       - AWS_REGION=${AWS_REGION}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
