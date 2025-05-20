@@ -32,8 +32,8 @@ setInterval(() => {
   insertMockSiloData();
 }, 1000); // 1000ms = 1 second
 
-// cron job to aggregate every hour
-cron.schedule("0 * * * *", async () => {
+// cron job to aggregate 10 minutes
+cron.schedule("*/10 * * * *", async () => {
   logger.info("Aggregating data...");
   await aggregateData();
 });
