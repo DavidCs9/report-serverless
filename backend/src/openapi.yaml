@@ -17,7 +17,11 @@ paths:
   /initiate-silo-report:
     post:
       summary: Generate a silo report
-      description: Generates a report synchronously and returns the S3 URL for downloading
+      description: |
+        Generates a comprehensive Excel report containing silo data analysis with multiple sheets:
+        - Dashboard: Overview of key metrics and statistics
+        - Summary Statistics: Detailed statistics for each silo
+        - Detailed Data: Raw data with hourly aggregations
       operationId: generateReport
       tags:
         - Reports
@@ -29,17 +33,29 @@ paths:
               schema:
                 type: object
                 properties:
+                  jobId:
+                    type: string
+                    description: Unique identifier for the report generation job
+                    example: "report-2024-03-21-123456"
+                  status:
+                    type: string
+                    description: Current status of the report generation
+                    enum: [COMPLETED, PROCESSING, FAILED]
+                    example: "COMPLETED"
                   s3Url:
                     type: string
                     format: uri
-                    description: Pre-signed S3 URL for downloading the report
+                    description: Pre-signed S3 URL for downloading the report (valid for 1 hour)
                     example: "https://example-bucket.s3.amazonaws.com/report-2024-03-21.xlsx"
-                  errorMessage:
-                    type: string
-                    description: Error message if the report generation failed
-                    nullable: true
+                  itemsProcessed:
+                    type: integer
+                    description: Number of data records processed in the report
+                    example: 1200
                 required:
+                  - jobId
+                  - status
                   - s3Url
+                  - itemsProcessed
         "500":
           description: Internal server error
           content:

@@ -346,7 +346,12 @@ async function generateExcelReport(jobId) {
     const endTime = new Date();
     const duration = endTime - startTime;
     logger.info(`Enhanced Excel report generated in ${duration}ms`);
-    return { jobId, status: "COMPLETED", s3Url: presignedUrl };
+    return {
+      jobId,
+      status: "COMPLETED",
+      s3Url: presignedUrl,
+      itemsProcessed: allData.length,
+    };
   } catch (error) {
     await updateReportStatus(jobId, "FAILED", null);
     logger.error(`Error generating Excel report: ${error}`);

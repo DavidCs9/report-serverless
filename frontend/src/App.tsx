@@ -15,6 +15,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [itemsProcessed, setItemsProcessed] = useState<number | null>(null);
   const [generateReportTime, setGenerateReportTime] = useState<number | null>(
     null
   );
@@ -29,6 +30,7 @@ function App() {
         "http://localhost:3000/api/initiate-silo-report"
       );
       setReportUrl(response.data.s3Url);
+      setItemsProcessed(response.data.itemsProcessed);
       setErrorMessage(null);
     } catch (err) {
       console.error("Error generating report:", err);
@@ -87,6 +89,9 @@ function App() {
                 <Box mt={4}>
                   <Text fontWeight="bold" mb={2}>
                     Report Ready! ({generateReportTime}ms)
+                  </Text>
+                  <Text fontSize="sm" mb={2}>
+                    {itemsProcessed} items processed
                   </Text>
                   <Button
                     as="a"
