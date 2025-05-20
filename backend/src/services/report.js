@@ -1,13 +1,6 @@
-const AWS = require("aws-sdk");
 const winston = require("winston");
 const db = require("./database");
-
-// Configure AWS
-AWS.config.update({
-  region: process.env.AWS_REGION,
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
+const generateExcelReport = require("./excel");
 
 const lambda = new AWS.Lambda();
 const logger = winston.createLogger({
@@ -33,16 +26,7 @@ class ReportService {
         );
       });
 
-      // Invoke Lambda asynchronously
-      /**
-       *  const params = {
-        FunctionName: process.env.REPORT_GENERATOR_LAMBDA_NAME,
-        InvocationType: "Event",
-        Payload: JSON.stringify({ jobId }),
-      };
-
-      await lambda.invoke(params).promise();
-       */
+      await generateExcelReport(jobId);
 
       //mock lambda invocation
       setTimeout(() => {
