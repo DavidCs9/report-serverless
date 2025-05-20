@@ -66,6 +66,9 @@ async function generateExcelReport(jobId) {
     await s3.putObject(s3Params).promise();
     const s3Url = `https://${process.env.AWS_S3_BUCKET}.s3.amazonaws.com/${jobId}.xlsx`;
 
+    // mock delay
+    await new Promise((resolve) => setTimeout(resolve, 10000)); // 10 seconds
+
     // put status to completed
     await updateReportStatus(jobId, "COMPLETED", s3Url);
   } catch (error) {
