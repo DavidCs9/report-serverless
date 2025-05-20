@@ -55,6 +55,11 @@ async function generateExcelReport(jobId) {
       },
     };
 
+    const highlightStyle = {
+      font: { bold: true },
+      fill: { type: "pattern", pattern: "solid", fgColor: { argb: "FFEB9C" } },
+    };
+
     // Dashboard Sheet
     const dashboardSheet = workbook.addWorksheet("Dashboard");
     dashboardSheet.views = [{ state: "frozen", xSplit: 0, ySplit: 1 }];
@@ -66,9 +71,6 @@ async function generateExcelReport(jobId) {
     // Detailed Data Sheet
     const detailedSheet = workbook.addWorksheet("Detailed Data");
     detailedSheet.views = [{ state: "frozen", xSplit: 0, ySplit: 1 }];
-
-    // Charts Sheet
-    const chartsSheet = workbook.addWorksheet("Charts");
 
     // Set up headers for detailed data
     const headers = [
@@ -82,11 +84,6 @@ async function generateExcelReport(jobId) {
       "Standard Deviation",
       "Variance",
     ];
-
-    detailedSheet.addRow(headers);
-    detailedSheet.getRow(1).eachCell((cell) => {
-      cell.style = headerStyle;
-    });
 
     // Collect all data for analysis
     const allData = [];
@@ -140,17 +137,9 @@ async function generateExcelReport(jobId) {
       }
     }
 
-    // Apply data style to all cells
-    detailedSheet.eachRow((row, rowNumber) => {
-      if (rowNumber > 1) {
-        row.eachCell((cell) => {
-          cell.style = dataStyle;
-        });
-      }
-    });
-
-    // Add summary statistics
+    // Add summary statistics with enhanced formatting
     summarySheet.addRow(["Silo Statistics Summary"]);
+    summarySheet.getRow(1).font = { bold: true, size: 14 };
     summarySheet.addRow([
       "Silo ID",
       "Average",
@@ -159,14 +148,21 @@ async function generateExcelReport(jobId) {
       "Total Records",
       "Std Dev",
       "Variance",
+      "Status",
     ]);
-    summarySheet.getRow(1).font = { bold: true, size: 14 };
     summarySheet.getRow(2).eachCell((cell) => {
       cell.style = headerStyle;
     });
 
-    Object.entries(siloStats).forEach(([siloId, stats]) => {
-      summarySheet.addRow([
+    // Calculate overall statistics for conditional formatting
+    const allAverages = Object.values(siloStats).map((stats) => stats.avg);
+    const overallAvg =
+      allAverages.reduce((a, b) => a + b, 0) / allAverages.length;
+    const maxAvg = Math.max(...allAverages);
+    const minAvg = Math.min(...allAverages);
+
+    Object.entries(siloStats).forEach(([siloId, stats], index) => {
+      const row = summarySheet.addRow([
         siloId,
         stats.avg.toFixed(2),
         stats.min.toFixed(2),
@@ -174,67 +170,160 @@ async function generateExcelReport(jobId) {
         stats.count,
         stats.stdDev.toFixed(2),
         stats.variance.toFixed(2),
+        stats.avg > overallAvg ? "Above Average" : "Below Average",
       ]);
+
+      // Apply conditional formatting
+      const avgCell = row.getCell(2);
+      if (stats.avg > overallAvg) {
+        avgCell.style = {
+          ...dataStyle,
+          font: { bold: true, color: { argb: "006100" } },
+          fill: {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "C6EFCE" },
+          },
+        };
+      } else {
+        avgCell.style = {
+          ...dataStyle,
+          font: { bold: true, color: { argb: "9C0006" } },
+          fill: {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFC7CE" },
+          },
+        };
+      }
+
+      // Add data bars for visual comparison
+      const statusCell = row.getCell(8);
+      statusCell.style = {
+        ...dataStyle,
+        alignment: { horizontal: "center" },
+      };
     });
 
-    // Add charts
-    const avgChart = workbook.addChart({
-      type: "column",
-      title: "Average Values by Silo",
-      legend: { position: "right" },
-    });
-
-    avgChart.addSeries({
-      name: "Average Values",
-      xRef: "Summary Statistics!$A$3:$A$14",
-      yRef: "Summary Statistics!$B$3:$B$14",
-    });
-
-    avgChart.setTitle("Average Values by Silo");
-    avgChart.xAxis.title = "Silo ID";
-    avgChart.yAxis.title = "Average Value";
-
-    chartsSheet.addRow([]);
-    chartsSheet.addImage(avgChart, {
-      tl: { col: 0, row: 0 },
-      br: { col: 10, row: 20 },
-    });
-
-    // Add dashboard content
+    // Add dashboard content with enhanced visualization
     dashboardSheet.addRow(["Silo Report Dashboard"]);
+    dashboardSheet.getRow(1).font = { bold: true, size: 16 };
     dashboardSheet.addRow(["Generated on: " + new Date().toLocaleString()]);
     dashboardSheet.addRow([]);
+
+    // Add summary statistics
     dashboardSheet.addRow(["Quick Statistics"]);
-    dashboardSheet.addRow([
-      "Total Silos",
-      "Total Records",
-      "Average Value Across All Silos",
-      "Highest Value",
-      "Lowest Value",
-    ]);
+    dashboardSheet.getRow(4).font = { bold: true, size: 14 };
+
+    const statsHeaders = ["Metric", "Value", "Status"];
+    dashboardSheet.addRow(statsHeaders);
+    dashboardSheet.getRow(5).eachCell((cell) => {
+      cell.style = headerStyle;
+    });
 
     const totalRecords = allData.reduce(
       (sum, row) => sum + row.record_count,
       0
     );
     const allValues = allData.map((row) => row.avg_value);
-    const overallAvg = allValues.reduce((a, b) => a + b, 0) / allValues.length;
     const highestValue = Math.max(...allValues);
     const lowestValue = Math.min(...allValues);
 
-    dashboardSheet.addRow([
-      siloIds.length,
-      totalRecords,
-      overallAvg.toFixed(2),
-      highestValue.toFixed(2),
-      lowestValue.toFixed(2),
-    ]);
+    // Add metrics with visual indicators
+    const metrics = [
+      ["Total Silos", siloIds.length, ""],
+      ["Total Records", totalRecords.toLocaleString(), ""],
+      [
+        "Average Value",
+        overallAvg.toFixed(2),
+        overallAvg > (maxAvg + minAvg) / 2
+          ? "Above Midpoint"
+          : "Below Midpoint",
+      ],
+      ["Highest Value", highestValue.toFixed(2), "Maximum"],
+      ["Lowest Value", lowestValue.toFixed(2), "Minimum"],
+    ];
 
-    // Set column widths
+    metrics.forEach(([metric, value, status], index) => {
+      const row = dashboardSheet.addRow([metric, value, status]);
+      row.getCell(1).style = {
+        ...dataStyle,
+        alignment: { horizontal: "right" },
+      };
+      row.getCell(3).style = {
+        ...dataStyle,
+        alignment: { horizontal: "center" },
+      };
+
+      // Add conditional formatting for the average value
+      if (metric === "Average Value") {
+        const cell = row.getCell(2);
+        cell.style = {
+          ...dataStyle,
+          font: { bold: true },
+          fill: {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFEB9C" },
+          },
+        };
+      }
+    });
+
+    // Add detailed data with conditional formatting
+    detailedSheet.addRow(headers);
+    detailedSheet.getRow(1).eachCell((cell) => {
+      cell.style = headerStyle;
+    });
+
+    // Apply conditional formatting to the detailed data
+    allData.forEach((row, index) => {
+      const dataRow = detailedSheet.addRow([
+        row.silo_id,
+        new Date(row.hour_timestamp).toLocaleString("en-US", {
+          timeZone: "America/New_York",
+        }),
+        row.avg_value,
+        row.min_value,
+        row.max_value,
+        row.sum_value,
+        row.record_count,
+        siloStats[row.silo_id].stdDev,
+        siloStats[row.silo_id].variance,
+      ]);
+
+      // Apply conditional formatting to the average value
+      const avgCell = dataRow.getCell(3);
+      if (row.avg_value > overallAvg) {
+        avgCell.style = {
+          ...dataStyle,
+          font: { color: { argb: "006100" } },
+          fill: {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "C6EFCE" },
+          },
+        };
+      } else {
+        avgCell.style = {
+          ...dataStyle,
+          font: { color: { argb: "9C0006" } },
+          fill: {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFC7CE" },
+          },
+        };
+      }
+    });
+
+    // Set column widths and freeze panes
     [detailedSheet, summarySheet, dashboardSheet].forEach((sheet) => {
       sheet.columns.forEach((column) => {
         column.width = 15;
       });
+      // Freeze the header row
+      sheet.views = [{ state: "frozen", xSplit: 0, ySplit: 1 }];
     });
 
     const excelBuffer = await workbook.xlsx.writeBuffer();

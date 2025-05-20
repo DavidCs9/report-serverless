@@ -31,6 +31,7 @@ function App() {
         "http://localhost:3000/api/initiate-silo-report"
       );
       setReportUrl(response.data.s3Url);
+      setErrorMessage(null);
       toast({
         title: "Report Generated",
         description: "Your report has been generated successfully!",
