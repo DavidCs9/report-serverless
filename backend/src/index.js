@@ -7,7 +7,7 @@ const YAML = require("yamljs");
 const path = require("path");
 const db = require("./services/database");
 const insertMockSiloData = require("./services/mock-silo");
-const aggregateLastHourData = require("./services/aggregate-data");
+const aggregateData = require("./services/aggregate-data");
 const cron = require("node-cron");
 // Load OpenAPI specification
 const swaggerDocument = YAML.load(path.join(__dirname, "openapi.yaml"));
@@ -32,10 +32,10 @@ setInterval(() => {
   insertMockSiloData();
 }, 1000); // 1000ms = 1 second
 
-// cron job to aggregate every 1 hour
+// cron job to aggregate every hour
 cron.schedule("0 * * * *", async () => {
   logger.info("Aggregating data...");
-  await aggregateLastHourData();
+  await aggregateData();
 });
 
 // Import routes
