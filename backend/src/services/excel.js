@@ -31,7 +31,7 @@ async function generateExcelReport(jobId) {
     const worksheet = workbook.addWorksheet("Silo Report");
     worksheet.addRow([
       "Silo ID",
-      "Timestamp",
+      "Hourly Timestamp",
       "Average Value",
       "Min Value",
       "Max Value",
@@ -43,15 +43,24 @@ async function generateExcelReport(jobId) {
 
     for (const siloId of siloIds) {
       const data = await getSiloData(siloId);
-      worksheet.addRow([
-        siloId,
-        data.timestamp,
-        data.averageValue,
-        data.minValue,
-        data.maxValue,
-        data.sumValue,
-        data.recordCount,
-      ]);
+      for (const row of data) {
+        const hourlyTimestamp = new Date(row.hour_timestamp).toLocaleString(
+          "en-US",
+          {
+            timeZone: "America/New_York",
+          }
+        );
+
+        worksheet.addRow([
+          row.silo_id,
+          hourlyTimestamp,
+          row.avg_value,
+          row.min_value,
+          row.max_value,
+          row.sum_value,
+          row.record_count,
+        ]);
+      }
     }
 
     const excelBuffer = await workbook.xlsx.writeBuffer();
