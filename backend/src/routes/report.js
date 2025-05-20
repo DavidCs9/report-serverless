@@ -7,8 +7,8 @@ const reportService = require("../services/report");
 router.post("/initiate-silo-report", async (req, res, next) => {
   try {
     const jobId = uuidv4();
-    await reportService.initiateReport(jobId);
-    res.json({ jobId, status: "PENDING" });
+    const result = await reportService.initiateReport(jobId);
+    res.json(result);
   } catch (error) {
     next(error);
   }

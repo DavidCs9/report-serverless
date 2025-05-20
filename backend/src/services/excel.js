@@ -81,6 +81,7 @@ async function generateExcelReport(jobId) {
     const endTime = new Date();
     const duration = endTime - startTime;
     logger.info(`Excel report generated in ${duration}ms`);
+    return { jobId, status: "COMPLETED", s3Url };
   } catch (error) {
     await updateReportStatus(jobId, "FAILED", null);
     logger.error(`Error generating Excel report: ${error}`);

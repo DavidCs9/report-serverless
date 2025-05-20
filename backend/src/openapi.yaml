@@ -36,9 +36,22 @@ paths:
                     example: "123e4567-e89b-12d3-a456-426614174000"
                   status:
                     type: string
-                    enum: [PENDING]
-                    description: Initial status of the report generation job
+                    enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+                    description: Current status of the report generation job
                     example: "PENDING"
+                  s3Url:
+                    type: string
+                    format: uri
+                    description: Pre-signed S3 URL for downloading the report (only when status is COMPLETED)
+                    nullable: true
+                    example: "https://example-bucket.s3.amazonaws.com/123e4567-e89b-12d3-a456-426614174000.xlsx"
+                  errorMessage:
+                    type: string
+                    description: Error message if the report generation failed
+                    nullable: true
+                required:
+                  - jobId
+                  - status
         "500":
           description: Internal server error
           content:

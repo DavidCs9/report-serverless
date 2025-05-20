@@ -27,6 +27,7 @@ async function getRawDataPerSilo(siloId) {
 }
 
 async function aggregateData() {
+  const startTime = new Date();
   for (const siloId of siloIds) {
     const rawData = await getRawDataPerSilo(siloId);
     rawData.forEach((item) => {
@@ -45,6 +46,9 @@ async function aggregateData() {
       `;
     await db.executeQuery(query);
   }
+  const endTime = new Date();
+  const duration = endTime - startTime;
+  logger.info(`Data aggregated in ${duration}ms`);
 }
 
 module.exports = aggregateData;
