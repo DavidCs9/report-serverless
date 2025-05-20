@@ -2,6 +2,12 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const winston = require("winston");
+const swaggerUi = require("swagger-ui-express");
+const YAML = require("yamljs");
+const path = require("path");
+
+// Load OpenAPI specification
+const swaggerDocument = YAML.load(path.join(__dirname, "openapi.yaml"));
 
 // Create logger
 const logger = winston.createLogger({
@@ -36,6 +42,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve OpenAPI documentation
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "Silo Report API Documentation",
+    customfavIcon: "/favicon.ico",
+  })
+);
+
 // Routes
 app.use("/api", reportRoutes);
 
@@ -52,4 +69,7 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
+  logger.info(
+    `API documentation available at http://localhost:${PORT}/api-docs`
+  );
 });

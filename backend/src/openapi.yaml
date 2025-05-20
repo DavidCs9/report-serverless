@@ -1,0 +1,124 @@
+openapi: 3.0.0
+info:
+  title: Silo Report API
+  description: API for generating and managing silo data reports
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+  - url: https://api.example.com/api
+    description: Production server
+
+paths:
+  /initiate-silo-report:
+    post:
+      summary: Initiate a new silo report generation
+      description: Creates a new report generation job and triggers the report generation process
+      operationId: initiateReport
+      tags:
+        - Reports
+      responses:
+        "200":
+          description: Report generation initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId:
+                    type: string
+                    format: uuid
+                    description: Unique identifier for the report generation job
+                    example: "123e4567-e89b-12d3-a456-426614174000"
+                  status:
+                    type: string
+                    enum: [PENDING]
+                    description: Initial status of the report generation job
+                    example: "PENDING"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /silo-report-status/{jobId}:
+    get:
+      summary: Get the status of a report generation job
+      description: Retrieves the current status and details of a report generation job
+      operationId: getReportStatus
+      tags:
+        - Reports
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique identifier of the report generation job
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        "200":
+          description: Report status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId:
+                    type: string
+                    format: uuid
+                    description: Unique identifier for the report generation job
+                  status:
+                    type: string
+                    enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+                    description: Current status of the report generation job
+                  s3Url:
+                    type: string
+                    format: uri
+                    description: Pre-signed S3 URL for downloading the report (only when status is COMPLETED)
+                    nullable: true
+                  errorMessage:
+                    type: string
+                    description: Error message if the report generation failed
+                    nullable: true
+                  createdAt:
+                    type: string
+                    format: date-time
+                    description: Timestamp when the job was created
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    description: Timestamp when the job was last updated
+        "404":
+          description: Report job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        message:
+          type: string
+          description: Detailed error message (only in development environment)
+          nullable: true
+      required:
+        - error
