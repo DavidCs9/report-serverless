@@ -34,7 +34,6 @@ setInterval(() => {
 
 // cron job to aggregate every hour
 cron.schedule("0 * * * *", async () => {
-  logger.info("Aggregating data...");
   await aggregateData();
 });
 

@@ -32,6 +32,7 @@ services:
       - DB_USER=root
       - DB_PASSWORD=rootpassword
       - DB_NAME=report_db
+      - TZ=America/Mexico_City
     depends_on:
       mysql:
         condition: service_healthy

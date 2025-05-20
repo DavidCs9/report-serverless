@@ -27,28 +27,36 @@ async function getRawDataPerSilo(siloId) {
 }
 
 async function aggregateData() {
-  const startTime = new Date();
-  for (const siloId of siloIds) {
-    const rawData = await getRawDataPerSilo(siloId);
-    rawData.forEach((item) => {
-      item.value = parseFloat(item.value);
-    });
-    const avgValue =
-      rawData.reduce((acc, curr) => acc + curr.value, 0) / rawData.length;
-    const minValue = Math.min(...rawData.map((item) => item.value));
-    const maxValue = Math.max(...rawData.map((item) => item.value));
-    const sumValue = rawData.reduce((acc, curr) => acc + curr.value, 0);
-    const recordCount = rawData.length;
+  const allData = [];
+  try {
+    const startTime = new Date();
+    for (const siloId of siloIds) {
+      const rawData = await getRawDataPerSilo(siloId);
+      allData.push(...rawData);
+      rawData.forEach((item) => {
+        item.value = parseFloat(item.value);
+      });
+      const avgValue =
+        rawData.reduce((acc, curr) => acc + curr.value, 0) / rawData.length;
+      const minValue = Math.min(...rawData.map((item) => item.value));
+      const maxValue = Math.max(...rawData.map((item) => item.value));
+      const sumValue = rawData.reduce((acc, curr) => acc + curr.value, 0);
+      const recordCount = rawData.length;
 
-    const query = `
+      const query = `
         INSERT INTO silo_hourly_aggregates (silo_id, hour_timestamp, avg_value, min_value, max_value, sum_value, record_count)
         VALUES (${siloId}, NOW(), ${avgValue}, ${minValue}, ${maxValue}, ${sumValue}, ${recordCount})
       `;
-    await db.executeQuery(query);
+      await db.executeQuery(query);
+    }
+    const endTime = new Date();
+    const duration = endTime - startTime;
+    logger.info(
+      `Data aggregated in ${duration}ms, ${allData.length} items processed`
+    );
+  } catch (error) {
+    logger.error(`Error aggregating data: ${error}`);
   }
-  const endTime = new Date();
-  const duration = endTime - startTime;
-  logger.info(`Data aggregated in ${duration}ms`);
 }
 
 module.exports = aggregateData;

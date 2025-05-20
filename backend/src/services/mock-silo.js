@@ -7,12 +7,16 @@ function generateMockSiloData() {
 }
 
 async function insertMockSiloData() {
-  const mockData = generateMockSiloData();
-  const query = `
+  try {
+    const mockData = generateMockSiloData();
+    const query = `
     INSERT INTO silo_raw_data (silo_id, value)
     VALUES (${mockData.siloId}, ${mockData.value})
   `;
-  await db.executeQuery(query);
+    await db.executeQuery(query);
+  } catch (error) {
+    logger.error(`Error inserting mock data: ${error}`);
+  }
 }
 
 module.exports = insertMockSiloData;
