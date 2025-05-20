@@ -26,8 +26,8 @@ const logger = winston.createLogger({
 });
 
 // mock silo data - insert every 1 second
+logger.info("Mock data being inserted...");
 setInterval(() => {
-  logger.info("Mock data being inserted...");
   insertMockSiloData();
 }, 1000); // 1000ms = 1 second
 
