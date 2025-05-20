@@ -10,7 +10,7 @@ router.post("/initiate-silo-report", async (req, res, next) => {
     const result = await reportService.initiateReport(jobId);
     res.json(result);
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

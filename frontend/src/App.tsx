@@ -15,6 +15,7 @@ import axios from "axios";
 function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [reportUrl, setReportUrl] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [generateReportTime, setGenerateReportTime] = useState<number | null>(
     null
   );
@@ -39,6 +40,7 @@ function App() {
       });
     } catch (err) {
       console.error("Error generating report:", err);
+      setErrorMessage("Failed to generate report. Please try again.");
       toast({
         title: "Error",
         description: "Failed to generate report. Please try again.",
@@ -88,7 +90,15 @@ function App() {
                 </Box>
               )}
 
-              {reportUrl && (
+              {errorMessage && (
+                <Box>
+                  <Text fontWeight="bold" mb={2}>
+                    Error: {errorMessage}
+                  </Text>
+                </Box>
+              )}
+
+              {reportUrl && !errorMessage && (
                 <Box mt={4}>
                   <Text fontWeight="bold" mb={2}>
                     Report Ready! ({generateReportTime}ms)

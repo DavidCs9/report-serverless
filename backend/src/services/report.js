@@ -26,12 +26,7 @@ class ReportService {
       });
 
       // Start report generation asynchronously
-      const result = await generateExcelReport(jobId).catch((error) => {
-        logger.error(
-          `Error in async report generation for job ${jobId}:`,
-          error
-        );
-      });
+      const result = await generateExcelReport(jobId);
 
       logger.info(`Report generation initiated for job ${jobId}`);
       return result;
