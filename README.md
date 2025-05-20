@@ -7,7 +7,7 @@ A Node.js service that generates Excel reports with hourly aggregated data for s
 The service consists of:
 
 - Node.js Express backend
-- MySQL database for data storage and job tracking
+- MySQL database for data storage
 - AWS S3 for report storage
 - Docker containers for local development
 
@@ -15,8 +15,8 @@ The service consists of:
 
 1. **Backend Service (Node.js/Express)**
 
-   - Handles API requests for report generation and status checking
-   - Manages report generation jobs
+   - Handles API requests for report generation
+   - Processes report generation synchronously
    - Interacts with MySQL database and AWS S3
    - Provides OpenAPI documentation
 
@@ -24,7 +24,6 @@ The service consists of:
 
    - Stores raw silo data
    - Maintains hourly aggregated data
-   - Tracks report generation jobs
 
 3. **Storage (AWS S3)**
    - Stores generated Excel reports
@@ -34,52 +33,18 @@ The service consists of:
 
 ### POST /api/initiate-silo-report
 
-Initiates a new report generation job.
+Generates and returns a report synchronously.
 
 **Response:**
 
 ```json
 {
-  "jobId": "uuid",
-  "status": "PENDING|PROCESSING|COMPLETED|FAILED",
-  "s3Url": "https://...", // Only present when status is COMPLETED
-  "errorMessage": "..." // Only present when status is FAILED
-}
-```
-
-### GET /api/silo-report-status/:jobId
-
-Retrieves the status of a report generation job.
-
-**Response:**
-
-```json
-{
-  "jobId": "uuid",
-  "status": "PENDING|PROCESSING|COMPLETED|FAILED",
-  "s3Url": "https://...", // Only present when status is COMPLETED
-  "errorMessage": "...", // Only present when status is FAILED
-  "createdAt": "timestamp",
-  "updatedAt": "timestamp"
+  "s3Url": "https://...", // URL to access the generated report
+  "errorMessage": "..." // Only present if an error occurs
 }
 ```
 
 ## Database Schema
-
-### report_jobs
-
-Tracks report generation jobs:
-
-```sql
-CREATE TABLE report_jobs (
-    job_id VARCHAR(255) PRIMARY KEY,
-    status ENUM('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED') NOT NULL,
-    s3_url VARCHAR(1024) NULL,
-    error_message TEXT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-```
 
 ### silo_hourly_aggregates
 
@@ -149,22 +114,12 @@ node src/scripts/create-tables.js
 
 ## Report Generation Process
 
-1. **Job Initiation**
-
+1. **Report Generation**
    - Client requests report generation via POST `/api/initiate-silo-report`
-   - System creates a new job record with status `PENDING`
-   - Report generation starts asynchronously
-
-2. **Data Processing**
-
    - System queries aggregated data from `silo_hourly_aggregates`
    - Generates Excel report using ExcelJS
    - Uploads report to S3
-   - Updates job status to `COMPLETED` with S3 URL
-
-3. **Status Tracking**
-   - Client polls GET `/api/silo-report-status/:jobId`
-   - System returns current job status and report URL when ready
+   - Returns the S3 URL to the client
 
 ## Monitoring
 
@@ -178,7 +133,6 @@ The service uses Winston for logging:
 
 - All errors are logged with appropriate context
 - API errors return standardized error responses
-- Failed jobs are marked with error messages
 - Development environment includes detailed error messages
 
 ## Security

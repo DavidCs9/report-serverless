@@ -14,20 +14,4 @@ router.post("/initiate-silo-report", async (req, res, next) => {
   }
 });
 
-// GET /api/silo-report-status/:jobId
-router.get("/silo-report-status/:jobId", async (req, res, next) => {
-  try {
-    const { jobId } = req.params;
-    const reportStatus = await reportService.getReportStatus(jobId);
-
-    if (!reportStatus) {
-      return res.status(404).json({ error: "Report job not found" });
-    }
-
-    res.json(reportStatus);
-  } catch (error) {
-    next(error);
-  }
-});
-
 module.exports = router;
