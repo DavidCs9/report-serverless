@@ -15,11 +15,15 @@ import axios from "axios";
 function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [reportUrl, setReportUrl] = useState<string | null>(null);
+  const [generateReportTime, setGenerateReportTime] = useState<number | null>(
+    null
+  );
   const toast = useToast();
 
   const generateReport = async () => {
     setIsLoading(true);
     setReportUrl(null);
+    const startTime = new Date();
 
     try {
       const response = await axios.post(
@@ -44,12 +48,15 @@ function App() {
       });
     } finally {
       setIsLoading(false);
+      const endTime = new Date();
+      const duration = endTime.getTime() - startTime.getTime();
+      setGenerateReportTime(duration);
     }
   };
 
   return (
     <ChakraProvider>
-      <Container maxW="container.md" py={10}>
+      <Container maxW="container.md" h="100vh" py={10}>
         <VStack spacing={8}>
           <Heading>Silo Report Generator</Heading>
 
@@ -84,7 +91,7 @@ function App() {
               {reportUrl && (
                 <Box mt={4}>
                   <Text fontWeight="bold" mb={2}>
-                    Report Ready!
+                    Report Ready! ({generateReportTime}ms)
                   </Text>
                   <Button
                     as="a"
