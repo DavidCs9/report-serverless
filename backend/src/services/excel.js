@@ -74,14 +74,20 @@ async function generateExcelReport(jobId) {
       Body: excelBuffer,
     };
     await s3.putObject(s3Params).promise();
-    const s3Url = `https://${process.env.AWS_S3_BUCKET}.s3.amazonaws.com/${jobId}.xlsx`;
 
-    // put status to completed
-    await updateReportStatus(jobId, "COMPLETED", s3Url);
+    // Generate a presigned URL that expires in 1 hour (3600 seconds)
+    const presignedUrl = await s3.getSignedUrlPromise("getObject", {
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: `${jobId}.xlsx`,
+      Expires: 3600,
+    });
+
+    // put status to completed with presigned URL
+    await updateReportStatus(jobId, "COMPLETED", presignedUrl);
     const endTime = new Date();
     const duration = endTime - startTime;
     logger.info(`Excel report generated in ${duration}ms`);
-    return { jobId, status: "COMPLETED", s3Url };
+    return { jobId, status: "COMPLETED", s3Url: presignedUrl };
   } catch (error) {
     await updateReportStatus(jobId, "FAILED", null);
     logger.error(`Error generating Excel report: ${error}`);
