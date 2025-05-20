@@ -6,6 +6,7 @@ const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const path = require("path");
 const db = require("./services/database");
+const insertMockSiloData = require("./services/mock-silo");
 
 // Load OpenAPI specification
 const swaggerDocument = YAML.load(path.join(__dirname, "openapi.yaml"));
@@ -23,6 +24,11 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: "logs/combined.log" }),
   ],
 });
+
+// mock silo data - insert every 1 second
+setInterval(() => {
+  insertMockSiloData();
+}, 1000); // 1000ms = 1 second
 
 // Import routes
 const reportRoutes = require("./routes/report");

@@ -63,7 +63,17 @@ async function createTables() {
     logger.info("Successfully created silo_hourly_aggregates table");
 
     // Add any additional tables here as needed
-
+    logger.info("Creating silo_raw_data table...");
+    await connection.execute("DROP TABLE IF EXISTS silo_raw_data;");
+    logger.info("silo_raw_data table dropped (if it existed).");
+    await connection.execute(`
+      CREATE TABLE silo_raw_data (
+            silo_id INT NOT NULL,
+            timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, -- e.g., 2025-05-19 14:01:32
+            value DECIMAL(10, 2),
+            PRIMARY KEY (silo_id, timestamp)
+        );`);
+    logger.info("Successfully created silo_raw_data table");
     logger.info("Database setup completed successfully");
   } catch (error) {
     logger.error("Error creating tables:", error);
