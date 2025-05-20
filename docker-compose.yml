@@ -29,8 +29,7 @@ services:
       mysql:
         condition: service_healthy
     volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - ./backend:/app # This mounts your application code for live development
     command: npm run dev
 
 volumes:
