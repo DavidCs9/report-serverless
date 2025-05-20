@@ -9,7 +9,6 @@ import {
   Container,
   Spinner,
 } from "@chakra-ui/react";
-import { useToast } from "@chakra-ui/toast";
 import axios from "axios";
 
 function App() {
@@ -19,7 +18,6 @@ function App() {
   const [generateReportTime, setGenerateReportTime] = useState<number | null>(
     null
   );
-  const toast = useToast();
 
   const generateReport = async () => {
     setIsLoading(true);
@@ -32,23 +30,9 @@ function App() {
       );
       setReportUrl(response.data.s3Url);
       setErrorMessage(null);
-      toast({
-        title: "Report Generated",
-        description: "Your report has been generated successfully!",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
     } catch (err) {
       console.error("Error generating report:", err);
       setErrorMessage("Failed to generate report. Please try again.");
-      toast({
-        title: "Error",
-        description: "Failed to generate report. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
     } finally {
       setIsLoading(false);
       const endTime = new Date();
