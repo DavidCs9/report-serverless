@@ -5,6 +5,7 @@ const winston = require("winston");
 const swaggerUi = require("swagger-ui-express");
 const YAML = require("yamljs");
 const path = require("path");
+const db = require("./services/database");
 
 // Load OpenAPI specification
 const swaggerDocument = YAML.load(path.join(__dirname, "openapi.yaml"));
@@ -67,9 +68,23 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  logger.info(`Server is running on port ${PORT}`);
-  logger.info(
-    `API documentation available at http://localhost:${PORT}/api-docs`
-  );
-});
+// Function to start the server
+async function startServer() {
+  try {
+    // Check database connection before starting the server
+    await db.ping();
+
+    app.listen(PORT, () => {
+      logger.info(`Server is running on port ${PORT}`);
+      logger.info(
+        `API documentation available at http://localhost:${PORT}/api-docs`
+      );
+    });
+  } catch (error) {
+    logger.error("Failed to start server:", error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();
