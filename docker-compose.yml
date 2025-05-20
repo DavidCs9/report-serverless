@@ -25,6 +25,13 @@ services:
       - "${PORT:-3000}:3000"
     env_file:
       - ./backend/.env
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=rootpassword
+      - DB_NAME=report_db
     depends_on:
       mysql:
         condition: service_healthy

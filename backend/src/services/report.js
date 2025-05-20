@@ -2,7 +2,6 @@ const winston = require("winston");
 const db = require("./database");
 const generateExcelReport = require("./excel");
 
-const lambda = new AWS.Lambda();
 const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(

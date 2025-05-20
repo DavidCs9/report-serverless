@@ -57,7 +57,7 @@ async function generateExcelReport(jobId) {
     const excelBuffer = await workbook.xlsx.writeBuffer();
 
     // update to s3
-    const s3 = new AWS.S3();
+    const s3 = AWS.S3();
     const s3Params = {
       Bucket: process.env.AWS_S3_BUCKET,
       Key: `${jobId}.xlsx`,
