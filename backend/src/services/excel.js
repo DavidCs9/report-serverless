@@ -57,7 +57,7 @@ async function generateExcelReport(jobId) {
     const excelBuffer = await workbook.xlsx.writeBuffer();
 
     // update to s3
-    const s3 = AWS.S3();
+    const s3 = new AWS.S3();
     const s3Params = {
       Bucket: process.env.AWS_S3_BUCKET,
       Key: `${jobId}.xlsx`,
@@ -88,7 +88,7 @@ async function getSiloData(siloId) {
 
 async function updateReportStatus(jobId, status, s3Url) {
   const query = `
-    UPDATE report_jobs SET status = '${status}', s3_url = '${s3Url}' WHERE id = '${jobId}'
+    UPDATE report_jobs SET status = '${status}', s3_url = '${s3Url}' WHERE job_id = '${jobId}'
   `;
   await db.executeQuery(query);
 }
