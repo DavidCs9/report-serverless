@@ -34,14 +34,20 @@ class ReportService {
       });
 
       // Invoke Lambda asynchronously
-      const params = {
+      /**
+       *  const params = {
         FunctionName: process.env.REPORT_GENERATOR_LAMBDA_NAME,
         InvocationType: "Event",
         Payload: JSON.stringify({ jobId }),
       };
 
       await lambda.invoke(params).promise();
-      logger.info(`Report generation initiated for job ${jobId}`);
+       */
+
+      //mock lambda invocation
+      setTimeout(() => {
+        logger.info(`Report generation initiated for job ${jobId}`);
+      }, 1000);
     } catch (error) {
       logger.error(`Error initiating report for job ${jobId}:`, error);
       throw error;
