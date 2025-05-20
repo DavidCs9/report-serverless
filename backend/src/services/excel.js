@@ -24,7 +24,7 @@ AWS.config.update({
 
 async function generateExcelReport(jobId) {
   try {
-    console.time("generateExcelReport");
+    const startTime = new Date();
     // put status to processing
     await updateReportStatus(jobId, "PROCESSING", null);
 
@@ -78,11 +78,12 @@ async function generateExcelReport(jobId) {
 
     // put status to completed
     await updateReportStatus(jobId, "COMPLETED", s3Url);
+    const endTime = new Date();
+    const duration = endTime - startTime;
+    logger.info(`Excel report generated in ${duration}ms`);
   } catch (error) {
     await updateReportStatus(jobId, "FAILED", null);
     logger.error(`Error generating Excel report: ${error}`);
-  } finally {
-    console.timeEnd("generateExcelReport");
   }
 }
 
